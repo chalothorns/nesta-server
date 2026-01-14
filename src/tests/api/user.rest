@@ -1,0 +1,18 @@
+### GET request to read all users
+GET http://localhost:3000/api/v1/tenants
+
+### POST request to create a new user
+POST http://localhost:3000/api/v1/tenants
+Content-Type: application/json
+
+{
+    "title": "นาย", 
+    "name": "สมปอง ใจดี", 
+    "phone": "0123456789",
+    "idCardNumber": "0123456789123",
+    "contractStartDate": "2026-01-11",
+    "currentAddress": "110/41 บางใหญ่ นนทบุรี"
+}
+
+### DELETE request to delete a user
+DELETE http://localhost:3000/api/v1/tenants/2
