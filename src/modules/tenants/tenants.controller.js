@@ -1,15 +1,13 @@
 import { Tenant } from "./tenants.model.js";
 
-export const getTenant = async (req, res) => {
+export const getTenant = async (req, res, next) => {
   const {id} = req.params
   try {
     const doc = await Tenant.findById(id)
 
     if(!doc){
-      return res.status(404).json({
-        success:false,
-        error: "ไม่พบข้อมูลผู้เช่า",
-      });
+      const error = new Error("User not found");
+      return next(error);
     }
 
     return res.status(200).json({
@@ -17,15 +15,15 @@ export const getTenant = async (req, res) => {
       data: doc
     });
   } catch (error) {
-    return res.status(500).json({
-      success: false,
-      error:"โหลดข้อมูลไม่สำเร็จ กรุณารีเฟรชหน้าจออีกครั้ง"
-    });
+    error.status = 500;
+    error.name = error.name || "DatabaseError";
+    error.message = error.message || "Failed to get a user";
+    return next(error);
     
   }
 };
 
-export const getTenants = async (req, res) => {
+export const getTenants = async (req, res, next) => {
     try{
      const tenants = await Tenant.find()
      return res.status(200).json({
@@ -33,24 +31,19 @@ export const getTenants = async (req, res) => {
       data: tenants
      })
     } catch(error){
-      return res.status(500).json({
-        success: false,
-        error: "เซิร์ฟเวอร์ขัดข้อง กรุณาลองใหม่อีกครั้ง",
-      });
+      return next(error);
     }
 };
 
-export const deleteTenant = async (req, res) => {
+export const deleteTenant = async (req, res, next) => {
   const { id } = req.params;
 
   try {
     const deleted = await Tenant.findByIdAndDelete(id)
 
     if(!deleted){
-      return res.status(404).json({
-        success: false,
-        error:"ไม่พบผู้ใช้งาน",
-      })
+      const error = new Error("User not found");
+      return next(error);
     }
 
     return res.status(200).json({
@@ -58,10 +51,7 @@ export const deleteTenant = async (req, res) => {
       data: null,
     });
   } catch (error) {
-    return res.status(500).json({
-      success: false,
-      error:"เกิดข้อผิดพลาดในการลบข้อมูล กรุณาลองใหม่อีกครั้ง"
-    })
+    return next(error);
     
   }
 
@@ -71,10 +61,11 @@ export const createTenant = async (req, res, next) => {
     const { title, name, phone,idCardNumber,contractStartDate,currentAddress, ...others } = req.body;
 
      if (!title || !name || !phone || !idCardNumber || !contractStartDate || !currentAddress) {
-    return res.status(400).json({
-      success: false,
-      error: "กรุณากรอกข้อมูลที่จำเป็นให้ครบถ้วน: คำนำหน้า, ชื่อ, เบอร์โทร, เลขบัตร, วันเริ่มสัญญา และที่อยู่"
-    });      
+    const error = new Error("All field are required");
+    error.name = "ValidationError";
+    error.status = 400;
+
+    return next();   
   };
   try {
     const doc = await Tenant.create({ title, name, phone,idCardNumber,contractStartDate,currentAddress, ...others });
@@ -96,12 +87,11 @@ export const createTenant = async (req, res, next) => {
     error.name = error.name || "DatabaseError";
     error.message = error.message || "เกิดข้อผิดพลาดในการบันทึกข้อมูลผู้เช่า";
     return next(error)
-
   
 }
 };
 
-export const updateTenant = async (req, res) => { 
+export const updateTenant = async (req, res, next) => { 
   const {id} = req.params
   const body = req.body;
 
@@ -112,10 +102,8 @@ export const updateTenant = async (req, res) => {
     });
 
     if(!updated){
-      return res.status(404).json({
-        success: false,
-        error: "ไม่พบข้อมูลผู้เช่า"
-      });
+      const error = new Error("User not found...");
+      return next(error);
     }
     return res.status(200).json({
       success: true,
@@ -123,15 +111,10 @@ export const updateTenant = async (req, res) => {
     })
   } catch (error) {
      if (error.code === 11000) {
-      error.status = 409;
-      error.name = "DuplicateKeyError";
-      error.message = "อีเมล หรือ เลขบัตรประชาชนนี้มีอยู่ในระบบแล้ว";
+      return next(error);
     }
 
-    error.status = 500;
-    error.name = error.name || "DatabaseError";
-    error.message = error.message || "เกิดข้อผิดพลาดในการบันทึกข้อมูลผู้เช่า";
-    return next(error)
+    return next(error);
 
   }
  }

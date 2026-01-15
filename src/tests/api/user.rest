@@ -1,18 +1,33 @@
-### GET request to read all users
-GET http://localhost:3000/api/v1/tenants
+### GET request to read all admin users
+GET http://localhost:3000/api/v1/admin
 
 ### POST request to create a new user
-POST http://localhost:3000/api/v1/tenants
+POST http://localhost:3000/api/v1/admin/register
 Content-Type: application/json
 
 {
-    "title": "นาย", 
-    "name": "สมปอง ใจดี", 
-    "phone": "0123456789",
-    "idCardNumber": "0123456789123",
-    "contractStartDate": "2026-01-11",
-    "currentAddress": "110/41 บางใหญ่ นนทบุรี"
+  "username": "Alice",
+  "email": "alice@example.com",
+  "password": "password123",
+  "role": "user"
 }
 
 ### DELETE request to delete a user
 DELETE http://localhost:3000/api/v1/tenants/2
+
+### POST Login a user
+POST http://localhost:3000/api/v1/admin/auth/cookie/login
+Content-Type: application/json
+
+{
+    "email": "alice@example.com",
+    "password" : "password123"
+}
+
+### POST Logout a user
+POST http://localhost:3000/api/v1/admin/auth/cookie/logout
+
+### GET check user authentication
+GET http://localhost:3000/api/v1/admin/auth/cookie/me
+
+
