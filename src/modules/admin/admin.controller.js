@@ -48,7 +48,7 @@ export const registerAdmin = async (req, res, next) => {
   }
 
   try {
-    const doc = await Admin.create({ username, email, password, role });
+    const doc = await Admin.create({ username, email: email.trim().toLowerCase(), password, role });
     const safe = doc.toObject();
     delete safe.password;
 
@@ -58,15 +58,18 @@ export const registerAdmin = async (req, res, next) => {
     });
   } catch (error) {
     if (error.code === 11000) {
-      error.status = 409;
-      error.name = "DuplicateKeyError";
-      error.message = "Email already in use";
+
+      const conflictError = new Error("Email already in use");
+      conflictError.status = 409;
+      conflictError.name = "DuplicateKeyError";
+      return next(conflictError);
     }
 
-    error.status = 500;
-    error.name = error.name || "DatabaseError";
-    error.message = error.message || "Failed to create a user";
-    return next(error);
+    const dbError = new Error(error.message || "Failed to create a user");
+    dbError.status = error.status || 500;
+    dbError.name = error.name || "DatabaseError";
+    
+    return next(dbError);
   
 }
 };
